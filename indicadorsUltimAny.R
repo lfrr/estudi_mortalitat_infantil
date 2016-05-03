@@ -1,20 +1,25 @@
 # Lautaro Rossi
 # 07/04/2016
-# Codi sota llicËncia GNU GPL v3
+# Codi sota llic√®ncia GNU GPL v3
 
 ##dependencies
+#se tiene que definir la carpeta de trabajo para cargar los datos codipaisos
+# se define con la funcion setwd o borrar y hacerlo desde Rstudio con session>set working directory>choose directory
 setwd("ruta del directori")
 load("./codi_paisos.RData")
 
 ### llibreries
+# si no se tienen las siguienetes librerias instaladas, quitar las almohadillas a las dos siguientes lineas>
 #install.packages("WDI")
 #install.packages("dplyr")
 library(WDI)
 library(dplyr)
 
-### WDIsearch() poblacio, area, area forestal, accÈs aigua, mortalitat menors 5 anys, etc.
-## es poden buscar els codis de mÈs variables (ex.: WDIsearch("gdp"))
-## afegir els codis desitjats a indvars (entre "" i desprÈs de una coma)
+# atenci√≥n: se tiene que usart la funcion WDisearch para encontrar los codigos de las vbariables que se quieren utilizar:
+### WDIsearch() poblacio, area, area forestal, acc√©s aigua, mortalitat menors 5 anys, etc.
+# ejemplo::: WDIsearch("population") y dar√° como resultado todos los codigos de las variables que estan relacionadas con la poblacion
+## es poden buscar els codis de m√©s variables (ex.: WDIsearch("gdp"))
+## afegir els codis desitjats a indvars (entre "" i despr√©s de una coma)
 
 ## variables incial sescollides 
 indvars <- c("SI.POV.GINI", "SH.STA.ACSN", "CC.EST",
@@ -41,16 +46,17 @@ nomdepvars <- c("mortalitatinf")
 
 ## acces API world bank indicators (s'ha d'haver creat la variable paisos amb dadesbancmundial.R o codi_paisos.RData)
 ## les variables explicatives es prenen de 2013 i la variable explicada de 2014
-wbdat = WDI(indicator = indvars, country = paisos, start=1970, end=2013)
+wbdat = WDI(indicator = indvars, country = paisos, start=1980, end=2013)
 wbdat2 = WDI(indicator = depvars, country = paisos, start=2014, end=2014)
 
+# ¬°¬°NO TOCAR NADA DESDE AQUI!!
 wbdat <- tbl_df(wbdat)
 wbdat2 <- tbl_df(wbdat2)
 
 wbdat <- arrange(wbdat, country, desc(year))
 # View(wbdat)
 
-##???????????? Escollir la ˙tlima dada disponible de cada variable per a cada paÌs ????????????##
+##???????????? Escollir la √∫tlima dada disponible de cada variable per a cada pa√≠s ????????????##
 
 colums <- dim(wbdat)[2] - 1
 dades<- tbl_df(data.frame(matrix(nrow=length(paisos), ncol=colums)))
@@ -97,12 +103,14 @@ dades <- dades[which(complete.cases(dades)),]
 ## dades <- filter(dades, !(rowSums(is.na(dades)) >= 2))
 dades
 
+## esta funci√≥n guardar√° los datos en el directorio
 save(dades, file="./dadespat.RData")
 load("./dadespat_ultimany.RData")
 library(Rcmdr)
 
-
-# estadÌstica descriptiva -------------------------------------------------
+# no ejecutar esta secci√≥n si se cambia algo del script
+if(FALSE){
+# estad√≠stica descriptiva -------------------------------------------------
 
 dades$controlcorrupcio <- (dades$controlcorrupcio+2)^(1)
 dades$controlcorrupcio <- (dades$controlcorrupcio)^(-0.13)
@@ -122,7 +130,7 @@ scatterplotMatrix(~ controlcorrupcio +
 
 shapiro.test(log(dades$accessanitat))
 
-# selecciÛ model ----------------------------------------------------------
+# selecci√≥ model ----------------------------------------------------------
 
 RegModel.1 <- 
   lm(mortalitatinf~accesaigua+accessanitat+co2perpib+controlcorrupcio+Gini+inudstrialitzacio+primcompletionfpercent,
@@ -137,3 +145,4 @@ regr3var <-
   lm(mortalitatinf~accessanitat+controlcorrupcio+primcompletionfpercent,
      data=dades)
 summary(regr3var)
+}
